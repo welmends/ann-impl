@@ -13,7 +13,7 @@ class Models(Enum):
     MLP      = 'MLP'
 
 class Classifier:
-    def __init__(self, model=Models.Adaline, runs=1, epochs=200, n_hidden=10, l_rate=0.01, p_train=0.8):
+    def __init__(self, model=Models.Adaline, runs=1, epochs=200, n_hidden=10, l_rate=0.1, p_train=0.8):
         self.model = model
         self.W_         = None
         self.H_         = None
