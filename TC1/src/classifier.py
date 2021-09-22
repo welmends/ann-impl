@@ -13,13 +13,14 @@ class Models(Enum):
     MLP      = 'MLP'
 
 class Classifier:
-    def __init__(self, model=Models.Adaline, runs=10, epochs=10, l_rate=0.01, p_train=0.8):
+    def __init__(self, model=Models.Adaline, runs=100, epochs=50, n_hidden=10, l_rate=0.01, p_train=0.8):
         self.model = model
         self.W_         = None
-        self.W_old      = None
+        self.H_         = None
         self.mom        = 0.0
         self.runs       = runs
         self.epochs     = epochs
+        self.n_hidden   = n_hidden
         self.l_rate     = l_rate
         self.p_train    = p_train
         self.n_attrib   = -1
@@ -29,7 +30,7 @@ class Classifier:
         self.rates_lbs  = [] # loop rates by class
 
     def train(self, X, y):
-        self.__init__(self.model, self.runs, self.epochs, self.l_rate, self.p_train)
+        self.__init__(self.model, self.runs, self.epochs, self.n_hidden, self.l_rate, self.p_train)
         self.n_attrib = X.shape[1]
         self.n_labels = y.shape[1]
         for loop in range(1, self.runs+1):
@@ -43,7 +44,11 @@ class Classifier:
             X_test, y_test   = X[round(self.p_train*len(X)):], y[round(self.p_train*len(y)):]
 
             # Weights matrix (random init)
-            self.W_ = 0.1*np.random.random((self.n_labels, self.n_attrib+1))
+            if self.model == Models.MLP:
+                self.H_ = 0.1*np.random.random((self.n_labels, self.n_hidden+1))
+                self.W_ = 0.1*np.random.random((self.n_hidden, self.n_attrib+1))
+            else:
+                self.W_ = 0.1*np.random.random((self.n_labels, self.n_attrib+1))
             self.l_curve = []
 
             ### Training
@@ -111,67 +116,38 @@ class Classifier:
 
     def fit_mlp(self, X, y):
         squared_error = 0
+        hidden_layer = []
         for i in range(X.shape[0]):
+            # Hidden Layer
             x = np.atleast_2d(np.concatenate(([-1], X[i,:]), axis=0)) # Add bias
-            Ui = np.dot(self.W_, x.T) # Predict based on weights matrix
+            Ui = np.dot(self.W_, x.T) # Predict based on weights matrix (hidden layer)
             Yi = self.activation_function(Ui) # Activation function
-            error = y[i,:] - Yi.T # Error
+            hidden_layer.append(Yi)
+            # Output Layer
+            z = np.concatenate((np.array([[-1]]), Yi), axis=0) # Add bias
+            Uk = np.dot(self.H_, z.T) # Predict based on weights matrix (output layer)
+            Yk = self.activation_function(Uk) # Activation function
+            # Error
+            error = y[i,:] - Yk.T # Error
             squared_error += 0.5*np.sum(np.power(error, 2)) # sum of squared errors
-            derivative = 0.5*(1 - np.power(Yi, 2)) + 0.05 # sigmoid logistic derivative
-            gradient = error * derivative.T # local gradient
-            self.W_ += self.l_rate * np.dot(gradient.T, x) # Weights matrix adjustment
+            # Local Gradient
+            derivative = Yk*(1 - Yk) + 0.01 # sigmoid logistic derivative
+            gradient_output = error * derivative.T # local gradient
+            derivative = Yi*(1 - Yi) + 0.01 # sigmoid logistic derivative
+            gradient_hidden = derivative*(self.H_[:,2:].T*gradient_output) # local gradient
+            # Weights Adjustment (Output Layer)
+            self.H_ += self.l_rate * np.dot(gradient_output.T, z) # Weights matrix adjustment
+            # Weights Adjustment (Hidden Layer)
+            self.H_ += self.l_rate * np.dot(gradient_hidden.T, x) # Weights matrix adjustment
         return squared_error
-        # %%% ETAPA DE TREINAMENTO
-        # for t=1:Ne,
-        #     Epoca=t;
-        #     I=randperm(cP); P=P(:,I); T1=T1(:,I);   % Embaralha vetores de treinamento
-        #     EQ=0;
-        #     for tt=1:cP,   % Inicia LOOP de epocas de treinamento
-        #         % CAMADA DE SAIDA
-        #         X  = [-1; P(:,tt)];   % Constroi vetor de entrada com adicao da entrada x0=-1
-        #         Ui = WW * X;          % Ativacao (net) dos neuronios de saida
-        #         Yi = (1-exp(-Ui))./(1+exp(-Ui)); % Saida entre [-1,1]
-        #         disp([Ui Yi])
-
-        #         % CALCULO DO ERRO
-        #         Ei = T1(:,tt) - Yi;           % erro entre a saida desejada e a saida da rede
-        #         EQ = EQ + 0.5*sum(Ei.^2);     % soma do erro quadratico de todos os neuronios p/ VETOR DE ENTRADA
-
-        #         %%% CALCULO DOS GRADIENTES LOCAIS
-        #         Di = 0.5*(1 - Yi.^2) + 0.05;  % derivada da sigmoide logistica (camada de saida)
-        #         DDi = Ei.*Di;       % gradiente local (camada de saida)
-
-        #         % AJUSTE DOS PESOS - CAMADA DE SAIDA
-        #         WW_aux=WW;
-        #         WW = WW + eta*DDi*X' + mom*(WW - WW_old);
-        #         WW_old=WW_aux;
-        #     end   % Fim de uma epoca
-
-        #     EQM(t)=EQ/cP;  % MEDIA DO ERRO QUADRATICO POR EPOCA
-        # end   % Fim do loop de treinamento
-
-
-        # %% ETAPA DE GENERALIZACAO  %%%
-        # EQ2=0; HID2=[]; OUT2=[];
-        # for tt=1:cQ,
-        #     % CAMADA OCULTA
-        #     X=[-1; Q(:,tt)];      % Constroi vetor de entrada com adicao da entrada x0=-1
-        #     Ui = WW * X;          % Ativacao (net) dos neuronios da camada oculta
-        #     Yi = (1-exp(-Ui))./(1+exp(-Ui));
-        #     OUT2=[OUT2 Yi];       % Armazena saida da rede
-
-        #     % CALCULO DO ERRO DE GENERALIZACAO
-        #     Ei = T2(:,tt) - Yi;
-        #     EQ2 = EQ2 + 0.5*sum(Ei.^2);
-        # end
 
     def activation_function(self, Ui):
         if self.model == Models.Adaline:
             return Ui
         elif self.model == Models.Logistic:
-            return (1 - np.exp(-Ui))/(1 + np.exp(-Ui))
+            return (1 - np.exp(-Ui))/(1 + np.exp(-Ui)) 
         elif self.model == Models.MLP:
-            return 1/(1 + np.exp(-Ui))
+            return 1/(1 + np.exp(-Ui)) # Logistic between [0,1]
 
     def evaluation_nn(self, X, y):
         confusion = np.zeros((self.n_labels,self.n_labels))
