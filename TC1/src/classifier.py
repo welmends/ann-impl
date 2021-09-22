@@ -46,8 +46,6 @@ class Classifier:
 
             ### Training
             for epoch in range(1, self.epochs):
-                print('Epoch: {}'.format(epoch))
-
                 # Shuffle training part
                 X_train, y_train = shuffle(X_train, y_train)
 
@@ -72,8 +70,8 @@ class Classifier:
             else:
                 self.evaluation_lmq(X_test, y_test)
             
-            # Return
-            return self.W_
+        # Return
+        return self.W_
 
     def predict(self):
         pass
