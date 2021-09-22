@@ -25,8 +25,8 @@ class MushroomDataset:
             self.raw = np.delete(self.raw, col, axis=1)
 
         # Data fill
-        self.X = self.raw[:,:-1]
-        self.y = self.ohe.fit_transform(np.atleast_2d(self.raw[:,-1]).T)
+        self.X = self.raw[:,0:]
+        self.y = self.ohe.fit_transform(np.atleast_2d(self.raw[:,0]).T) # Convert numerical labels into binary (1-out-of-K) labels
 
     def standardize(self):
         ### Standardization: (d - mean ) / std        [For each column]
@@ -38,13 +38,13 @@ class MushroomDataset:
 
     def save_arff(self):
         with open('mushroom.arff', 'w') as f:
-            f.write('@RELATION xor\n')
+            f.write('@RELATION mushroom\n')
             f.write('\n')
-            f.write('@ATTRIBUTE x REAL\n')
-            f.write('@ATTRIBUTE y REAL\n')
-            f.write('@ATTRIBUTE class {1.0,0.0}\n')
+            for i in range(self.X.shape[1]):
+                f.write('@ATTRIBUTE {} REAL\n'.format(i+1))
+            f.write('@ATTRIBUTE class {0,1}\n')
             f.write('\n')
             f.write('@DATA\n')
-            for d in self.raw:
-                f.write(','.join(d.astype(str)))
+            for i in range(self.X.shape[0]):
+                f.write(','.join(self.X[i].astype(str))+',{}'.format(np.argmax(self.y[i])))
                 f.write('\n')
