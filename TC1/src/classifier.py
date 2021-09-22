@@ -13,7 +13,7 @@ class Models(Enum):
     MLP      = 'MLP'
 
 class Classifier:
-    def __init__(self, model=Models.Adaline, runs=1, epochs=200, n_hidden=10, l_rate=0.1, p_train=0.8):
+    def __init__(self, model=Models.Adaline, runs=1, epochs=50, n_hidden=10, l_rate=0.1, p_train=0.8):
         self.model = model
         self.W_         = None
         self.H_         = None
@@ -74,23 +74,32 @@ class Classifier:
                     self.l_curve.append(squared_error/X_train.shape[0]) # Learning Curve
 
             ### Evaluation
-            if self.model != Models.LMQ:
-                squared_error = self.evaluation_nn(X_test, y_test)
-            else:
-                self.evaluation_lmq(X_test, y_test)
+            squared_error = self.evaluation(X_test, y_test)
 
         # Return
         return self.W_
 
-    def predict(self):
-        pass
+    def predict(self, sample):
+        if self.model != Models.LMQ:
+            x = np.atleast_2d(np.concatenate(([-1], sample), axis=0)) # Add bias
+            Ui = np.dot(self.W_, x.T) # Predict based on weights matrix (hidden layer)
+            Y = self.activation_function(Ui) # Activation function
+            if self.model == Models.MLP:
+                z = np.concatenate((np.array([[-1]]), Y), axis=0) # Add bias
+                Uk = np.dot(self.H_, z) # Predict based on weights matrix (output layer)
+                Y = self.activation_function(Uk) # Activation function
+            return Y
+        else:
+            return np.dot(sample, self.W_) # LMQ predict
 
     def fit_adaline(self, X, y):
         squared_error = 0
         for i in range(X.shape[0]):
+            # Prediction
             x = np.atleast_2d(np.concatenate(([-1], X[i,:]), axis=0)) # Add bias
             Ui = np.dot(self.W_, x.T) # Predict based on weights matrix
             Yi = self.activation_function(Ui) # Activation function
+            # Error Adjustment
             error = y[i,:] - Yi.T # Error
             squared_error += 0.5*np.sum(np.power(error, 2)) # sum of squared errors
             self.W_ += self.l_rate * np.dot(error.T, x) # Weights matrix adjustment
@@ -99,9 +108,11 @@ class Classifier:
     def fit_logistic(self, X, y):
         squared_error = 0
         for i in range(X.shape[0]):
+            # Prediction
             x = np.atleast_2d(np.concatenate(([-1], X[i,:]), axis=0)) # Add bias
             Ui = np.dot(self.W_, x.T) # Predict based on weights matrix
             Yi = self.activation_function(Ui) # Activation function
+            # Error Adjustment
             error = y[i,:] - Yi.T # Error
             squared_error += 0.5*np.sum(np.power(error, 2)) # sum of squared errors
             derivative = 0.5*(1 - np.power(Yi, 2)) + 0.05 # sigmoid logistic derivative
@@ -117,6 +128,7 @@ class Classifier:
     def fit_mlp(self, X, y):
         squared_error = 0
         for i in range(X.shape[0]):
+            ### Prediction
             # Hidden Layer
             x = np.atleast_2d(np.concatenate(([-1], X[i,:]), axis=0)) # Add bias
             Ui = np.dot(self.W_, x.T) # Predict based on weights matrix (hidden layer)
@@ -125,15 +137,15 @@ class Classifier:
             z = np.concatenate((np.array([[-1]]), Yi), axis=0) # Add bias
             Uk = np.dot(self.H_, z) # Predict based on weights matrix (output layer)
             Yk = self.activation_function(Uk) # Activation function
+            ### Error Adjustment (Backpropagation)
             # Error
             error = y[i,:] - Yk.T # Error
             squared_error += 0.5*np.sum(np.power(error, 2)) # sum of squared errors
-            ## Backpropagation ##
             # Local Gradient
             derivative = Yk*(1 - Yk) + 0.01 # sigmoid logistic derivative
             gradient_output = error * derivative.T # local gradient (output)
             derivative = Yi*(1 - Yi) + 0.01 # sigmoid logistic derivative
-            gradient_hidden = derivative * np.dot(self.H_[:,1:].T, gradient_output.T) # local gradient (hidden) ***
+            gradient_hidden = derivative * np.dot(self.H_[:,1:].T, gradient_output.T) # local gradient (hidden)
             # Weights Adjustment (Output Layer)
             self.H_ += self.l_rate * np.dot(gradient_output.T, z.T) # Weights matrix adjustment
             # Weights Adjustment (Hidden Layer)
@@ -148,29 +160,13 @@ class Classifier:
         elif self.model == Models.MLP:
             return 1/(1 + np.exp(-Ui)) # Logistic between [0,1]
 
-    def evaluation_nn(self, X, y):
+    def evaluation(self, X, y):
         confusion = np.zeros((self.n_labels,self.n_labels))
         squared_error = 0
         for i in range(X.shape[0]):
-            x = np.atleast_2d(np.concatenate(([-1], X[i,:]), axis=0)) # Add bias
-            Ui = np.dot(self.W_, x.T) # Predict based on weights matrix (hidden layer)
-            Y = self.activation_function(Ui) # Activation function
-            if self.model == Models.MLP:
-                z = np.concatenate((np.array([[-1]]), Y), axis=0) # Add bias
-                Uk = np.dot(self.H_, z) # Predict based on weights matrix (output layer)
-                Y = self.activation_function(Uk) # Activation function
+            Y = self.predict(X[i,:])
             squared_error += 0.5*np.sum(np.power(y[i,:] - Y, 2)) # sum of squared errors
             predicted = np.argmax(Y)
-            real = np.argmax(y[i,:])
-            confusion[predicted,real]+=1
-        self.compute_confusion_matrix(confusion)
-        return squared_error/X.shape[0];
-
-    def evaluation_lmq(self, X, y):
-        confusion = np.zeros((self.n_labels,self.n_labels))
-        squared_error = 0
-        for i in range(X.shape[0]):
-            predicted = np.argmax(np.dot(X[i,:], self.W_))
             real = np.argmax(y[i,:])
             confusion[predicted,real]+=1
         self.compute_confusion_matrix(confusion)
@@ -204,3 +200,6 @@ class Classifier:
             plt.plot(self.l_curve)
             plt.show()
         return
+
+    def plot_2d_decision_surface(self):
+        pass 
