@@ -16,6 +16,8 @@ class Classifier:
     def __init__(self, model=Models.Adaline, runs=10, epochs=10, l_rate=0.01, p_train=0.8):
         self.model = model
         self.W_         = None
+        self.W_old      = None
+        self.mom        = 0.0
         self.runs       = runs
         self.epochs     = epochs
         self.l_rate     = l_rate
@@ -53,12 +55,12 @@ class Classifier:
                 if self.model == Models.Adaline:
                     squared_error = self.fit_adaline(X_train, y_train)
                 elif self.model == Models.Logistic:
-                    pass
+                    squared_error = self.fit_logistic(X_train, y_train)
                 elif self.model == Models.LMQ:
                     self.fit_lmq(X_train, y_train)
                     break
                 elif self.model == Models.MLP:
-                    pass
+                    squared_error = self.fit_mlp(X_train, y_train)
                 else:
                     print('> Error: No valid classifier')
                     exit(-1)
@@ -81,9 +83,23 @@ class Classifier:
         for i in range(X.shape[0]):
             x = np.atleast_2d(np.concatenate(([-1], X[i,:]), axis=0)) # Add bias
             Ui = np.dot(self.W_, x.T) # Predict based on weights matrix
-            error = y[i,:] - Ui.T # Error
+            Yi = self.activation_function(Ui) # Activation function
+            error = y[i,:] - Yi.T # Error
             squared_error += 0.5*np.sum(np.power(error, 2)) # sum of squared errors
             self.W_ += self.l_rate * np.dot(error.T, x) # Weights matrix adjustment
+        return squared_error
+
+    def fit_logistic(self, X, y):
+        squared_error = 0
+        for i in range(X.shape[0]):
+            x = np.atleast_2d(np.concatenate(([-1], X[i,:]), axis=0)) # Add bias
+            Ui = np.dot(self.W_, x.T) # Predict based on weights matrix
+            Yi = self.activation_function(Ui) # Activation function
+            error = y[i,:] - Yi.T # Error
+            squared_error += 0.5*np.sum(np.power(error, 2)) # sum of squared errors
+            derivative = 0.5*(1 - np.power(Yi, 2)) + 0.05 # sigmoid logistic derivative
+            gradient = error * derivative.T # local gradient
+            self.W_ += self.l_rate * np.dot(gradient.T, x) # Weights matrix adjustment
         return squared_error
 
     def fit_lmq(self, X, y):
@@ -91,14 +107,26 @@ class Classifier:
         self.W_ = np.dot(np.linalg.pinv(X), y)
         return
 
+    def fit_mlp(self, X, y):
+        pass
+
+    def activation_function(self, Ui):
+        if self.model == Models.Adaline:
+            return Ui
+        elif self.model == Models.Logistic:
+            return (1 - np.exp(Ui))/(1 + np.exp(Ui))
+        elif self.model == Models.MLP:
+            return 0
+
     def evaluation_nn(self, X, y):
         confusion = np.zeros((self.n_labels,self.n_labels))
         squared_error = 0
         for i in range(X.shape[0]):
             x = np.atleast_2d(np.concatenate(([-1], X[i,:]), axis=0)) # Add bias
             Ui = np.dot(x, self.W_.T) # Predict based on weights matrix
-            squared_error += 0.5*np.sum(np.power(y[i,:] - Ui, 2)) # sum of squared errors
-            predicted = np.argmax(Ui)
+            Yi = self.activation_function(Ui) # Activation function
+            squared_error += 0.5*np.sum(np.power(y[i,:] - Yi, 2)) # sum of squared errors
+            predicted = np.argmax(Yi)
             real = np.argmax(y[i,:])
             confusion[predicted,real]+=1
         self.compute_confusion_matrix(confusion)
