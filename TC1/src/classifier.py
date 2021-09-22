@@ -110,7 +110,60 @@ class Classifier:
         return
 
     def fit_mlp(self, X, y):
-        pass
+        squared_error = 0
+        for i in range(X.shape[0]):
+            x = np.atleast_2d(np.concatenate(([-1], X[i,:]), axis=0)) # Add bias
+            Ui = np.dot(self.W_, x.T) # Predict based on weights matrix
+            Yi = self.activation_function(Ui) # Activation function
+            error = y[i,:] - Yi.T # Error
+            squared_error += 0.5*np.sum(np.power(error, 2)) # sum of squared errors
+            derivative = 0.5*(1 - np.power(Yi, 2)) + 0.05 # sigmoid logistic derivative
+            gradient = error * derivative.T # local gradient
+            self.W_ += self.l_rate * np.dot(gradient.T, x) # Weights matrix adjustment
+        return squared_error
+        # %%% ETAPA DE TREINAMENTO
+        # for t=1:Ne,
+        #     Epoca=t;
+        #     I=randperm(cP); P=P(:,I); T1=T1(:,I);   % Embaralha vetores de treinamento
+        #     EQ=0;
+        #     for tt=1:cP,   % Inicia LOOP de epocas de treinamento
+        #         % CAMADA DE SAIDA
+        #         X  = [-1; P(:,tt)];   % Constroi vetor de entrada com adicao da entrada x0=-1
+        #         Ui = WW * X;          % Ativacao (net) dos neuronios de saida
+        #         Yi = (1-exp(-Ui))./(1+exp(-Ui)); % Saida entre [-1,1]
+        #         disp([Ui Yi])
+
+        #         % CALCULO DO ERRO
+        #         Ei = T1(:,tt) - Yi;           % erro entre a saida desejada e a saida da rede
+        #         EQ = EQ + 0.5*sum(Ei.^2);     % soma do erro quadratico de todos os neuronios p/ VETOR DE ENTRADA
+
+        #         %%% CALCULO DOS GRADIENTES LOCAIS
+        #         Di = 0.5*(1 - Yi.^2) + 0.05;  % derivada da sigmoide logistica (camada de saida)
+        #         DDi = Ei.*Di;       % gradiente local (camada de saida)
+
+        #         % AJUSTE DOS PESOS - CAMADA DE SAIDA
+        #         WW_aux=WW;
+        #         WW = WW + eta*DDi*X' + mom*(WW - WW_old);
+        #         WW_old=WW_aux;
+        #     end   % Fim de uma epoca
+
+        #     EQM(t)=EQ/cP;  % MEDIA DO ERRO QUADRATICO POR EPOCA
+        # end   % Fim do loop de treinamento
+
+
+        # %% ETAPA DE GENERALIZACAO  %%%
+        # EQ2=0; HID2=[]; OUT2=[];
+        # for tt=1:cQ,
+        #     % CAMADA OCULTA
+        #     X=[-1; Q(:,tt)];      % Constroi vetor de entrada com adicao da entrada x0=-1
+        #     Ui = WW * X;          % Ativacao (net) dos neuronios da camada oculta
+        #     Yi = (1-exp(-Ui))./(1+exp(-Ui));
+        #     OUT2=[OUT2 Yi];       % Armazena saida da rede
+
+        #     % CALCULO DO ERRO DE GENERALIZACAO
+        #     Ei = T2(:,tt) - Yi;
+        #     EQ2 = EQ2 + 0.5*sum(Ei.^2);
+        # end
 
     def activation_function(self, Ui):
         if self.model == Models.Adaline:
@@ -118,7 +171,7 @@ class Classifier:
         elif self.model == Models.Logistic:
             return (1 - np.exp(-Ui))/(1 + np.exp(-Ui))
         elif self.model == Models.MLP:
-            return 0
+            return 1/(1 + np.exp(-Ui))
 
     def evaluation_nn(self, X, y):
         confusion = np.zeros((self.n_labels,self.n_labels))
