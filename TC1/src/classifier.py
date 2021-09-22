@@ -13,7 +13,7 @@ class Models(Enum):
     MLP      = 'MLP'
 
 class Classifier:
-    def __init__(self, model=Models.Adaline, runs=100, epochs=50, n_hidden=10, l_rate=0.01, p_train=0.8):
+    def __init__(self, model=Models.Adaline, runs=1, epochs=200, n_hidden=10, l_rate=0.01, p_train=0.8):
         self.model = model
         self.W_         = None
         self.H_         = None
@@ -116,29 +116,28 @@ class Classifier:
 
     def fit_mlp(self, X, y):
         squared_error = 0
-        hidden_layer = []
         for i in range(X.shape[0]):
             # Hidden Layer
             x = np.atleast_2d(np.concatenate(([-1], X[i,:]), axis=0)) # Add bias
             Ui = np.dot(self.W_, x.T) # Predict based on weights matrix (hidden layer)
             Yi = self.activation_function(Ui) # Activation function
-            hidden_layer.append(Yi)
             # Output Layer
             z = np.concatenate((np.array([[-1]]), Yi), axis=0) # Add bias
-            Uk = np.dot(self.H_, z.T) # Predict based on weights matrix (output layer)
+            Uk = np.dot(self.H_, z) # Predict based on weights matrix (output layer)
             Yk = self.activation_function(Uk) # Activation function
             # Error
             error = y[i,:] - Yk.T # Error
             squared_error += 0.5*np.sum(np.power(error, 2)) # sum of squared errors
+            ## Backpropagation ##
             # Local Gradient
             derivative = Yk*(1 - Yk) + 0.01 # sigmoid logistic derivative
-            gradient_output = error * derivative.T # local gradient
+            gradient_output = error * derivative.T # local gradient (output)
             derivative = Yi*(1 - Yi) + 0.01 # sigmoid logistic derivative
-            gradient_hidden = derivative*(self.H_[:,2:].T*gradient_output) # local gradient
+            gradient_hidden = derivative * np.dot(self.H_[:,1:].T, gradient_output.T) # local gradient (hidden) ***
             # Weights Adjustment (Output Layer)
-            self.H_ += self.l_rate * np.dot(gradient_output.T, z) # Weights matrix adjustment
+            self.H_ += self.l_rate * np.dot(gradient_output.T, z.T) # Weights matrix adjustment
             # Weights Adjustment (Hidden Layer)
-            self.H_ += self.l_rate * np.dot(gradient_hidden.T, x) # Weights matrix adjustment
+            self.W_ += self.l_rate * np.dot(gradient_hidden, x) # Weights matrix adjustment
         return squared_error
 
     def activation_function(self, Ui):
@@ -154,10 +153,14 @@ class Classifier:
         squared_error = 0
         for i in range(X.shape[0]):
             x = np.atleast_2d(np.concatenate(([-1], X[i,:]), axis=0)) # Add bias
-            Ui = np.dot(x, self.W_.T) # Predict based on weights matrix
-            Yi = self.activation_function(Ui) # Activation function
-            squared_error += 0.5*np.sum(np.power(y[i,:] - Yi, 2)) # sum of squared errors
-            predicted = np.argmax(Yi)
+            Ui = np.dot(self.W_, x.T) # Predict based on weights matrix (hidden layer)
+            Y = self.activation_function(Ui) # Activation function
+            if self.model == Models.MLP:
+                z = np.concatenate((np.array([[-1]]), Y), axis=0) # Add bias
+                Uk = np.dot(self.H_, z) # Predict based on weights matrix (output layer)
+                Y = self.activation_function(Uk) # Activation function
+            squared_error += 0.5*np.sum(np.power(y[i,:] - Y, 2)) # sum of squared errors
+            predicted = np.argmax(Y)
             real = np.argmax(y[i,:])
             confusion[predicted,real]+=1
         self.compute_confusion_matrix(confusion)

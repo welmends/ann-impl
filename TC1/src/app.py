@@ -5,8 +5,8 @@ from sklearn.preprocessing import OneHotEncoder
 
 if __name__=='__main__':
     dataset = MushroomDataset()
-    model = Classifier(model=Models.MLP)
-    
+    model = Classifier(model=Models.Logistic)
+
     data = np.hstack( (np.loadtxt('xor_input.txt', dtype=float).T, np.loadtxt('xor_target.txt', dtype=float).T.reshape(1000,1)) )
     ohe = OneHotEncoder(sparse=False)
     X = data[:,:-1]
