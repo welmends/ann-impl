@@ -24,10 +24,12 @@ class Classifier:
         self.p_train    = p_train
         self.n_attrib   = -1
         self.n_labels   = -1
-        self.rates      = []
-        self.rates_lbs  = []
+        self.l_curve    = [] # learning curve (squared erros by epochs)
+        self.rates      = [] # loop rates
+        self.rates_lbs  = [] # loop rates by class
 
     def train(self, X, y):
+        self.__init__(self.model, self.runs, self.epochs, self.l_rate, self.p_train)
         self.n_attrib = X.shape[1]
         self.n_labels = y.shape[1]
         for loop in range(1, self.runs+1):
@@ -42,7 +44,7 @@ class Classifier:
 
             # Weights matrix (random init)
             self.W_ = 0.1*np.random.random((self.n_labels, self.n_attrib+1))
-            squared_error_epochs = []
+            self.l_curve = []
 
             ### Training
             for epoch in range(1, self.epochs):
@@ -62,14 +64,16 @@ class Classifier:
                 else:
                     print('> Error: No valid classifier')
                     exit(-1)
-                squared_error_epochs.append(squared_error/X_train.shape[0]) # Learning Curve
+
+                if self.model != Models.LMQ:
+                    self.l_curve.append(squared_error/X_train.shape[0]) # Learning Curve
 
             ### Evaluation
             if self.model != Models.LMQ:
                 squared_error = self.evaluation_nn(X_test, y_test)
             else:
                 self.evaluation_lmq(X_test, y_test)
-            
+
         # Return
         return self.W_
 
@@ -112,7 +116,7 @@ class Classifier:
         if self.model == Models.Adaline:
             return Ui
         elif self.model == Models.Logistic:
-            return (1 - np.exp(Ui))/(1 + np.exp(Ui))
+            return (1 - np.exp(-Ui))/(1 + np.exp(-Ui))
         elif self.model == Models.MLP:
             return 0
 
@@ -162,3 +166,9 @@ class Classifier:
         stats['mean_lbs'] = np.mean(np.array(self.rates_lbs), axis=0)
         stats['std_lbs'] = np.std(np.array(self.rates_lbs), axis=0)
         return stats
+
+    def plot_learning_curve(self):
+        if len(self.l_curve)>0:
+            plt.plot(self.l_curve)
+            plt.show()
+        return

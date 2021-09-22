@@ -5,7 +5,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 if __name__=='__main__':
     dataset = MushroomDataset()
-    model = Classifier(model=Models.Adaline)
+    model = Classifier(model=Models.Logistic)
     ohe = OneHotEncoder(sparse=False)
 
     data = np.hstack( (np.loadtxt('xor_input.txt', dtype=float).T, np.loadtxt('xor_target.txt', dtype=float).T.reshape(1000,1)) )
@@ -15,4 +15,5 @@ if __name__=='__main__':
     model.train(X, y)
     # model.train(dataset.X, dataset.y)
     print(model.get_stats())
+    model.plot_learning_curve()
     
