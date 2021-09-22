@@ -12,7 +12,7 @@ if __name__=='__main__':
     X = data[:,:-1]
     y = ohe.fit_transform(np.atleast_2d(data[:,-1]).T)
 
-    # model.train(X, y)
-    model.train(dataset.X, dataset.y)
+    model.train(X, y)
+    # model.train(dataset.X, dataset.y)
     print(model.get_stats())
     
