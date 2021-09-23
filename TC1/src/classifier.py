@@ -29,10 +29,13 @@ class Classifier:
         self.rates      = [] # loop rates
         self.rates_lbs  = [] # loop rates by class
 
+        self.X, self.y  = None, None
+
     def train(self, X, y):
         self.__init__(self.model, self.runs, self.epochs, self.n_hidden, self.l_rate, self.p_train)
         self.n_attrib = X.shape[1]
         self.n_labels = y.shape[1]
+        self.X, self.y  = X, y
         for loop in range(1, self.runs+1):
             print('Loop: {}'.format(loop))
 
@@ -202,4 +205,25 @@ class Classifier:
         return
 
     def plot_2d_decision_surface(self):
-        pass 
+        if self.X.shape[1] != 2:
+            print('Error: Number of attributes must be exactly 2')
+            return
+        interval = 0.01
+        attr1 = np.arange(np.min(self.X[:,0]), np.max(self.X[:,0]), interval)
+        attr2 = np.arange(np.min(self.X[:,1]), np.max(self.X[:,1]), interval)
+        lb1, lb2 = [], []
+        for a1 in attr1:
+            for a2 in attr2:
+                if np.argmax(self.predict(np.array([a1, a2])))==0:
+                    lb1.append(np.array([a1, a2]))
+                else:
+                    lb2.append(np.array([a1, a2]))
+        lb1, lb2 = np.array(lb1), np.array(lb2)
+        # Surface plot
+        plt.scatter(lb1[:,0], lb1[:,1])
+        plt.scatter(lb2[:,0], lb2[:,1])
+        # Samples plot
+        for lb in [0,1]:
+            cond = np.where(self.y[:,lb]==1)
+            plt.scatter(self.X[cond][:,0],self.X[cond][:,1])
+        plt.show()
