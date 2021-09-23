@@ -37,7 +37,7 @@ class Classifier:
         self.n_labels = y.shape[1]
         self.X, self.y  = X, y
         for loop in range(1, self.runs+1):
-            print('Loop: {}'.format(loop))
+            # print('Loop: {}'.format(loop))
 
             # Shuffle rows of the data matrix
             X, y = shuffle(X, y)

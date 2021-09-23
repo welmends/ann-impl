@@ -3,7 +3,7 @@ from classifier import Classifier, Models
 
 if __name__=='__main__':
     dataset = XORDataset()
-    model = Classifier(model=Models.MLP)
+    model = Classifier(model=Models.MLP, runs=1, epochs=50, n_hidden=2, l_rate=0.1, p_train=0.8)
 
     model.train(dataset.X, dataset.y)
     print(model.get_stats())
