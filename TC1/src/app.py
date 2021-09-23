@@ -2,7 +2,7 @@ from dataset import MushroomDataset, XORDataset, ORDataset
 from classifier import Classifier, Models
 
 if __name__=='__main__':
-    dataset = MushroomDataset()
+    dataset = XORDataset()
     model = Classifier(model=Models.MLP)
 
     model.train(dataset.X, dataset.y)
