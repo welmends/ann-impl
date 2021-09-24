@@ -236,5 +236,5 @@ class Classifier:
         # Samples plot
         for lb in [0,1]:
             cond = np.where(self.y[:,lb]==1)
-            plt.scatter(self.X[cond][:,0],self.X[cond][:,1])
+            plt.scatter(self.X[cond][:,0],self.X[cond][:,1], alpha=0.5)
         plt.show()
