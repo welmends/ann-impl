@@ -190,6 +190,9 @@ class Classifier:
             rates_lb.append( (TP+TN)/(TP+TN+FP+FN) )
         self.rates.append(np.sum(np.diag(confusion))/np.sum(confusion))
         self.rates_lbs.append(rates_lb)
+        if self.log:
+            print('confusion matrix: \n{}'.format(confusion))
+            print('acc: {}'.format(self.rates[-1]))
         return
 
     def get_stats(self):
