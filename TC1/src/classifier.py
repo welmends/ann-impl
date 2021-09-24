@@ -39,7 +39,8 @@ class Classifier:
 
     def progress_bar(self, run, epoch):
         bar, done = 50, ((run-1)*self.epochs+epoch+1)/(self.runs*self.epochs)
-        sys.stdout.write("\r Training: [%s%s]" % ('=' * int(bar*done), ' ' * (bar-int(bar*done))) )  
+        bar_done, bar_miss = int(bar*done), (bar-int(bar*done))
+        sys.stdout.write("\r Training: [%s%s] %0.1f%%" % ('=' * bar_done, ' ' * bar_miss, bar_done*100/bar) )  
         sys.stdout.flush()
 
     def train(self, X, y):
