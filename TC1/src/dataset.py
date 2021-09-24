@@ -69,7 +69,7 @@ class MushroomDataset(Dataset):
             self.raw = np.delete(self.raw, col, axis=1)
 
         # Data fill
-        self.X = self.raw[:,0:]
+        self.X = self.raw[:,1:]
         self.y = self.ohe.fit_transform(np.atleast_2d(self.raw[:,0]).T) # Convert numerical labels into binary (1-out-of-K) labels
 
 class XORDataset(Dataset):
