@@ -5,10 +5,10 @@ if __name__=='__main__':
     # Params
     n_runs   = 100
     epochs   = 50
-    n_hidden = 2
+    n_hidden = 10
     l_rate   = 0.01
     p_train  = 0.8
-    log      = False
+    log      = True
 
     # Dataset
     dataset  = MushroomDataset()
@@ -22,7 +22,6 @@ if __name__=='__main__':
 
     # Experiment
     for method in methods:
-        print(method.model.name)
         method.train(dataset.X, dataset.y)
         method.save_stats()
         method.save_learning_curve()

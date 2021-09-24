@@ -47,6 +47,8 @@ class Classifier:
         self.n_attrib = X.shape[1]
         self.n_labels = y.shape[1]
         self.X, self.y  = X, y
+        if self.log:
+            print('> Model {}'.format(self.model.name))
         for run in range(1, self.runs+1):
             # Shuffle rows of the data matrix
             X, y = shuffle(X, y)
@@ -228,6 +230,7 @@ class Classifier:
 
     def plot_learning_curve(self):
         if len(self.l_curve)>0:
+            plt.figure()
             plt.plot(self.l_curve)
             plt.title('Learning Curve ({})'.format(self.model.name))
             plt.xlabel('Epochs')
@@ -237,6 +240,7 @@ class Classifier:
     
     def save_learning_curve(self):
         if len(self.l_curve)>0:
+            plt.figure()
             plt.plot(self.l_curve)
             plt.title('Learning Curve ({})'.format(self.model.name))
             plt.xlabel('Epochs')
@@ -260,6 +264,8 @@ class Classifier:
                     lb2.append(np.array([a1, a2]))
         lb1, lb2 = np.array(lb1), np.array(lb2)
         # Surface plot
+        plt.figure()
+        plt.title('Decision Surface ({})'.format(self.model.name))
         if len(lb1)>0:
             plt.scatter(lb1[:,0], lb1[:,1])
         else:
