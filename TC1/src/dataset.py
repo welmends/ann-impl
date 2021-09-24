@@ -1,15 +1,59 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.preprocessing import OneHotEncoder
 
-class MushroomDataset:
-    def __init__(self, path='mushroom_dataset/agaricus-lepiota.data'):
+class Dataset:
+    def __init__(self, name, path):
+        self.name    = name
         self.path    = path
         self.raw     = None
         self.X       = None
         self.y       = None
         self.samples = -1
         self.ohe     = OneHotEncoder(sparse=False)
+
+    def standardize(self):
+        ### Standardization: (d - mean ) / std        [For each column]
+        self.X = (self.X - np.mean(self.X, axis=0)) / np.std(self.X, axis=0)
+
+    def normalization(self):
+        ### Normalization  : (d - min) / (max - min)  [For each column]
+        self.X = ( self.X - np.min(self.X, axis=0) ) / ( np.max(self.X, axis=0) - np.min(self.X, axis=0) )
+
+    def save_arff(self):
+        with open('{}.arff'.format(self.name), 'w') as f:
+            f.write('@RELATION {}\n'.format(self.name))
+            f.write('\n')
+            for i in range(self.X.shape[1]):
+                f.write('@ATTRIBUTE {} REAL\n'.format(i+1))
+            f.write('@ATTRIBUTE class {' + str(list(map(int, set(self.y.flatten()))))[1:-1] + '}\n')
+            f.write('\n')
+            f.write('@DATA\n')
+            for i in range(self.X.shape[0]):
+                f.write(','.join(self.X[i].astype(str))+',{}'.format(np.argmax(self.y[i])))
+                f.write('\n')
+    
+    def save_txt(self):
+        with open('{}.txt'.format(self.name), 'w') as f:
+            for row_X, row_y in zip(self.X, self.y):
+                for r in row_X:
+                    f.write(str(r)+',')
+                f.write('{}\n'.format(np.argmax(row_y)))
+                
+    def save_txt_split(self):
+        with open('{}_input.txt'.format(self.name), 'w') as f:
+            for col in self.X.T:
+                for c in col:
+                    f.write(str(c)+' ')
+                f.write('\n')
+        with open('{}_target.txt'.format(self.name), 'w') as f:
+            for col in self.y.T:
+                for c in col:
+                    f.write(str(int(c))+' ')
+                f.write('\n')
+
+class MushroomDataset(Dataset):
+    def __init__(self, path='mushroom_dataset/agaricus-lepiota.data'):
+        super().__init__('mushroom', path)
         self.load_dataset()
         self.standardize()
 
@@ -28,36 +72,11 @@ class MushroomDataset:
         self.X = self.raw[:,0:]
         self.y = self.ohe.fit_transform(np.atleast_2d(self.raw[:,0]).T) # Convert numerical labels into binary (1-out-of-K) labels
 
-    def standardize(self):
-        ### Standardization: (d - mean ) / std        [For each column]
-        self.X = (self.X - np.mean(self.X, axis=0)) / np.std(self.X, axis=0)
-
-    def normalization(self):
-        ### Normalization  : (d - min) / (max - min)  [For each column]
-        self.X = ( self.X - np.min(self.X, axis=0) ) / ( np.max(self.X, axis=0) - np.min(self.X, axis=0) )
-
-    def save_arff(self):
-        with open('mushroom.arff', 'w') as f:
-            f.write('@RELATION mushroom\n')
-            f.write('\n')
-            for i in range(self.X.shape[1]):
-                f.write('@ATTRIBUTE {} REAL\n'.format(i+1))
-            f.write('@ATTRIBUTE class {0,1}\n')
-            f.write('\n')
-            f.write('@DATA\n')
-            for i in range(self.X.shape[0]):
-                f.write(','.join(self.X[i].astype(str))+',{}'.format(np.argmax(self.y[i])))
-                f.write('\n')
-
-class XORDataset:
+class XORDataset(Dataset):
     def __init__(self, path_input='xor_or_dataset/xor_input.txt', path_target='xor_or_dataset/xor_target.txt'):
-        self.path_input  = path_input
+        super().__init__('xor', '')
+        self.path_input = path_input
         self.path_target = path_target
-        self.raw         = None
-        self.X           = None
-        self.y           = None
-        self.samples     = -1
-        self.ohe         = OneHotEncoder(sparse=False)
         self.load_dataset()
         self.standardize()
 
@@ -68,36 +87,11 @@ class XORDataset:
         self.X = data[:,:-1]
         self.y = self.ohe.fit_transform(np.atleast_2d(data[:,-1]).T)
 
-    def standardize(self):
-        ### Standardization: (d - mean ) / std        [For each column]
-        self.X = (self.X - np.mean(self.X, axis=0)) / np.std(self.X, axis=0)
-
-    def normalization(self):
-        ### Normalization  : (d - min) / (max - min)  [For each column]
-        self.X = ( self.X - np.min(self.X, axis=0) ) / ( np.max(self.X, axis=0) - np.min(self.X, axis=0) )
-
-    def save_arff(self):
-        with open('xor.arff', 'w') as f:
-            f.write('@RELATION xor\n')
-            f.write('\n')
-            for i in range(self.X.shape[1]):
-                f.write('@ATTRIBUTE {} REAL\n'.format(i+1))
-            f.write('@ATTRIBUTE class {0,1}\n')
-            f.write('\n')
-            f.write('@DATA\n')
-            for i in range(self.X.shape[0]):
-                f.write(','.join(self.X[i].astype(str))+',{}'.format(np.argmax(self.y[i])))
-                f.write('\n')
-
-class ORDataset:
+class ORDataset(Dataset):
     def __init__(self, path_input='xor_or_dataset/or_input.txt', path_target='xor_or_dataset/or_target.txt'):
-        self.path_input  = path_input
+        super().__init__('or', '')
+        self.path_input = path_input
         self.path_target = path_target
-        self.raw         = None
-        self.X           = None
-        self.y           = None
-        self.samples     = -1
-        self.ohe         = OneHotEncoder(sparse=False)
         self.load_dataset()
         self.standardize()
 
@@ -107,24 +101,3 @@ class ORDataset:
         self.raw = data
         self.X = data[:,:-1]
         self.y = self.ohe.fit_transform(np.atleast_2d(data[:,-1]).T)
-
-    def standardize(self):
-        ### Standardization: (d - mean ) / std        [For each column]
-        self.X = (self.X - np.mean(self.X, axis=0)) / np.std(self.X, axis=0)
-
-    def normalization(self):
-        ### Normalization  : (d - min) / (max - min)  [For each column]
-        self.X = ( self.X - np.min(self.X, axis=0) ) / ( np.max(self.X, axis=0) - np.min(self.X, axis=0) )
-
-    def save_arff(self):
-        with open('or.arff', 'w') as f:
-            f.write('@RELATION or\n')
-            f.write('\n')
-            for i in range(self.X.shape[1]):
-                f.write('@ATTRIBUTE {} REAL\n'.format(i+1))
-            f.write('@ATTRIBUTE class {0,1}\n')
-            f.write('\n')
-            f.write('@DATA\n')
-            for i in range(self.X.shape[0]):
-                f.write(','.join(self.X[i].astype(str))+',{}'.format(np.argmax(self.y[i])))
-                f.write('\n')
