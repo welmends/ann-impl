@@ -13,7 +13,7 @@ class Models(Enum):
     MLP      = 'MLP'
 
 class Classifier:
-    def __init__(self, model=Models.Adaline, runs=1, epochs=50, n_hidden=10, l_rate=0.1, p_train=0.8):
+    def __init__(self, model=Models.Adaline, runs=1, epochs=50, n_hidden=10, l_rate=0.1, p_train=0.8, log=False):
         self.model = model
         self.W_         = None
         self.H_         = None
@@ -23,6 +23,7 @@ class Classifier:
         self.n_hidden   = n_hidden
         self.l_rate     = l_rate
         self.p_train    = p_train
+        self.log        = log
         self.n_attrib   = -1
         self.n_labels   = -1
         self.l_curve    = [] # learning curve (squared erros by epochs)
@@ -32,12 +33,13 @@ class Classifier:
         self.X, self.y  = None, None
 
     def train(self, X, y):
-        self.__init__(self.model, self.runs, self.epochs, self.n_hidden, self.l_rate, self.p_train)
+        self.__init__(self.model, self.runs, self.epochs, self.n_hidden, self.l_rate, self.p_train, self.log)
         self.n_attrib = X.shape[1]
         self.n_labels = y.shape[1]
         self.X, self.y  = X, y
         for loop in range(1, self.runs+1):
-            # print('Loop: {}'.format(loop))
+            if self.log:
+                print('Loop: {}'.format(loop))
 
             # Shuffle rows of the data matrix
             X, y = shuffle(X, y)
@@ -56,6 +58,9 @@ class Classifier:
 
             ### Training
             for epoch in range(1, self.epochs):
+                if self.log:
+                    print(' | Epoch: {}'.format(epoch))
+
                 # Shuffle training part
                 X_train, y_train = shuffle(X_train, y_train)
 
