@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import json
@@ -36,15 +37,17 @@ class Classifier:
 
         self.X, self.y  = None, None
 
+    def progress_bar(self, run, epoch):
+        bar, done = 50, ((run-1)*self.runs+(epoch)+1)/(self.runs*self.epochs)
+        sys.stdout.write("\r Training: [%s%s]" % ('=' * int(bar*done), ' ' * (bar-int(bar*done))) )  
+        sys.stdout.flush()
+
     def train(self, X, y):
         self.__init__(self.model, self.runs, self.epochs, self.n_hidden, self.l_rate, self.p_train, self.log)
         self.n_attrib = X.shape[1]
         self.n_labels = y.shape[1]
         self.X, self.y  = X, y
-        for loop in range(1, self.runs+1):
-            if self.log:
-                print('Loop: {}'.format(loop))
-
+        for run in range(1, self.runs+1):
             # Shuffle rows of the data matrix
             X, y = shuffle(X, y)
 
@@ -62,8 +65,9 @@ class Classifier:
 
             ### Training
             for epoch in range(1, self.epochs):
+                # Progress bar
                 if self.log:
-                    print(' | Epoch: {}'.format(epoch))
+                    self.progress_bar(run, epoch)
 
                 # Shuffle training part
                 X_train, y_train = shuffle(X_train, y_train)
@@ -89,6 +93,7 @@ class Classifier:
             squared_error = self.evaluation(X_test, y_test)
 
         # Return
+        print()
         return self.W_
 
     def predict(self, sample):
@@ -194,9 +199,9 @@ class Classifier:
             rates_lb.append( (TP+TN)/(TP+TN+FP+FN) )
         self.rates.append(np.sum(np.diag(confusion))/np.sum(confusion))
         self.rates_lbs.append(rates_lb)
-        if self.log:
-            print('confusion matrix: \n{}'.format(confusion))
-            print('acc: {}'.format(self.rates[-1]))
+        # if self.log:
+        #     print('confusion matrix: \n{}'.format(confusion))
+        #     print('acc: {}'.format(self.rates[-1]))
         return
     
     def get_stats(self):
