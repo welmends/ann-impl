@@ -7,6 +7,7 @@ if __name__=='__main__':
 
     model.train(dataset.X, dataset.y)
     print(model.get_stats())
+    model.save_stats()
     model.plot_learning_curve()
     model.plot_2d_decision_surface()
     

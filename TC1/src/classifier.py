@@ -1,10 +1,14 @@
 import numpy as np
-import numpy.matlib as npm
 import matplotlib.pyplot as plt
+import json
 from sklearn.utils import shuffle
-import scipy.linalg
-import scipy.stats
 from enum import Enum
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 class Models(Enum):
     Adaline  = 'Adaline'
@@ -14,7 +18,7 @@ class Models(Enum):
 
 class Classifier:
     def __init__(self, model=Models.Adaline, runs=1, epochs=50, n_hidden=10, l_rate=0.1, p_train=0.8, log=False):
-        self.model = model
+        self.model      = model
         self.W_         = None
         self.H_         = None
         self.mom        = 0.0
@@ -194,17 +198,28 @@ class Classifier:
             print('confusion matrix: \n{}'.format(confusion))
             print('acc: {}'.format(self.rates[-1]))
         return
-
+    
     def get_stats(self):
         stats = {}
-        stats['mean']   = np.mean(self.rates)
-        stats['std']    = np.std(self.rates)
-        stats['median'] = np.median(self.rates)
-        stats['min']    = np.min(self.rates)
-        stats['max']    = np.max(self.rates)
+        stats['name']     = self.model.name
+        stats['runs']     = self.runs
+        stats['epochs']   = self.epochs
+        stats['n_hidden'] = self.n_hidden
+        stats['l_rate']   = self.l_rate
+        stats['p_train']  = self.p_train
+        stats['mean']     = np.mean(self.rates)
+        stats['std']      = np.std(self.rates)
+        stats['median']   = np.median(self.rates)
+        stats['min']      = np.min(self.rates)
+        stats['max']      = np.max(self.rates)
         stats['mean_lbs'] = np.mean(np.array(self.rates_lbs), axis=0)
-        stats['std_lbs'] = np.std(np.array(self.rates_lbs), axis=0)
+        stats['std_lbs']  = np.std(np.array(self.rates_lbs), axis=0)
         return stats
+    
+    def save_stats(self):
+        stats = self.get_stats()
+        with open('{}.json'.format(stats['name']), 'w') as json_file:
+            json.dump(stats, json_file, cls=NumpyEncoder, indent=4, separators=(',', ': '))
 
     def plot_learning_curve(self):
         if len(self.l_curve)>0:

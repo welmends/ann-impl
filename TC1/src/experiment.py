@@ -24,5 +24,5 @@ if __name__=='__main__':
     for method in methods:
         print(method.model.name)
         method.train(dataset.X, dataset.y)
-        print(method.get_stats())
+        method.save_stats()
     
