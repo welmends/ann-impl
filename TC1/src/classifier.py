@@ -220,8 +220,14 @@ class Classifier:
                     lb2.append(np.array([a1, a2]))
         lb1, lb2 = np.array(lb1), np.array(lb2)
         # Surface plot
-        plt.scatter(lb1[:,0], lb1[:,1])
-        plt.scatter(lb2[:,0], lb2[:,1])
+        if len(lb1)>0:
+            plt.scatter(lb1[:,0], lb1[:,1])
+        else:
+            plt.scatter(self.X[0,0], self.X[0,1])
+        if len(lb2)>0:    
+            plt.scatter(lb2[:,0], lb2[:,1])
+        else:
+            plt.scatter(self.X[0,0], self.X[0,1])
         # Samples plot
         for lb in [0,1]:
             cond = np.where(self.y[:,lb]==1)
