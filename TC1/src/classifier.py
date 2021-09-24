@@ -22,7 +22,6 @@ class Classifier:
         self.model      = model
         self.W_         = None
         self.H_         = None
-        self.mom        = 0.0
         self.runs       = runs
         self.epochs     = epochs
         self.n_hidden   = n_hidden
@@ -39,7 +38,7 @@ class Classifier:
         self.X, self.y  = None, None
 
     def progress_bar(self, run, epoch):
-        bar, done = 50, ((run-1)*self.runs+(epoch)+1)/(self.runs*self.epochs)
+        bar, done = 50, ((run-1)*self.epochs+epoch+1)/(self.runs*self.epochs)
         sys.stdout.write("\r Training: [%s%s]" % ('=' * int(bar*done), ' ' * (bar-int(bar*done))) )  
         sys.stdout.flush()
 
@@ -96,7 +95,7 @@ class Classifier:
             squared_error = self.evaluation(X_test, y_test)
 
         # Return
-        self.progress_bar(self.runs-1, self.epochs)
+        self.progress_bar(self.runs, self.epochs-1)
         print()
         return self.W_
 
