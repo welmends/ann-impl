@@ -33,7 +33,7 @@ class Classifier:
         self.l_curve    = [] # learning curve (squared erros by epochs)
         self.rates      = [] # loop rates
         self.rates_lbs  = [] # loop rates by class
-        self.lcurv_plot = plt.figure()
+        self.fig1       = plt.figure()
 
         self.X, self.y  = None, None
 
@@ -232,7 +232,6 @@ class Classifier:
 
     def plot_learning_curve(self):
         if len(self.l_curve)>0:
-            plt.figure()
             plt.plot(self.l_curve)
             plt.title('Learning Curve ({})'.format(self.model.name))
             plt.xlabel('Epochs')
@@ -242,7 +241,6 @@ class Classifier:
     
     def save_learning_curve(self):
         if len(self.l_curve)>0:
-            plt.figure()
             plt.plot(self.l_curve)
             plt.title('Learning Curve ({})'.format(self.model.name))
             plt.xlabel('Epochs')
