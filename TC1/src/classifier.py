@@ -229,7 +229,19 @@ class Classifier:
     def plot_learning_curve(self):
         if len(self.l_curve)>0:
             plt.plot(self.l_curve)
+            plt.title('Learning Curve ({})'.format(self.model.name))
+            plt.xlabel('Epochs')
+            plt.ylabel('Mean Squared Error (MSE)')
             plt.show()
+        return
+    
+    def save_learning_curve(self):
+        if len(self.l_curve)>0:
+            plt.plot(self.l_curve)
+            plt.title('Learning Curve ({})'.format(self.model.name))
+            plt.xlabel('Epochs')
+            plt.ylabel('Mean Squared Error (MSE)')
+            plt.savefig('{}.png'.format(self.model.name))
         return
 
     def plot_2d_decision_surface(self):

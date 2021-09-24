@@ -25,4 +25,5 @@ if __name__=='__main__':
         print(method.model.name)
         method.train(dataset.X, dataset.y)
         method.save_stats()
+        method.save_learning_curve()
     
