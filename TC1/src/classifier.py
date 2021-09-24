@@ -96,8 +96,9 @@ class Classifier:
             squared_error = self.evaluation(X_test, y_test)
 
         # Return
-        self.progress_bar(self.runs, self.epochs-1)
-        print()
+        if self.log:
+            self.progress_bar(self.runs, self.epochs-1)
+            print()
         return self.W_
 
     def predict(self, sample):
@@ -199,13 +200,12 @@ class Classifier:
             TP = confusion[lb,lb]
             FP = np.sum(confusion[lb,:]) - confusion[lb,lb]
             FN = np.sum(confusion[:,lb]) - confusion[lb,lb]
-            TN = np.sum(confusion) - TP - FP - FN
-            rates_lb.append( (TP+TN)/(TP+TN+FP+FN) )
+            # TN = np.sum(confusion) - TP - FP - FN
+            rates_lb.append( (TP)/(TP+FP+FN) )
         self.rates.append(np.sum(np.diag(confusion))/np.sum(confusion))
         self.rates_lbs.append(rates_lb)
-        # if self.log:
-        #     print('confusion matrix: \n{}'.format(confusion))
-        #     print('acc: {}'.format(self.rates[-1]))
+        # print('confusion matrix: \n{}'.format(confusion))
+        # print('acc: {}'.format(self.rates[-1]))
         return
     
     def get_stats(self):
