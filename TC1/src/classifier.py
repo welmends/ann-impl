@@ -34,6 +34,7 @@ class Classifier:
         self.l_curve    = [] # learning curve (squared erros by epochs)
         self.rates      = [] # loop rates
         self.rates_lbs  = [] # loop rates by class
+        self.lcurv_plot = plt.figure()
 
         self.X, self.y  = None, None
 
@@ -95,6 +96,7 @@ class Classifier:
             squared_error = self.evaluation(X_test, y_test)
 
         # Return
+        self.progress_bar(self.runs-1, self.epochs)
         print()
         return self.W_
 
@@ -246,6 +248,18 @@ class Classifier:
             plt.xlabel('Epochs')
             plt.ylabel('Mean Squared Error (MSE)')
             plt.savefig('{}.png'.format(self.model.name))
+        return
+
+    def save_all_learning_curves(self):
+        if len(self.l_curve)>0:
+            plt.figure(1)
+            l,=plt.plot(self.l_curve)
+            plt.title('Learning Curves')
+            plt.xlabel('Epochs')
+            plt.ylabel('Mean Squared Error (MSE)')
+            l.set_label('{}'.format(self.model.name))
+            plt.legend()
+            plt.savefig('learning_curves.png')
         return
 
     def plot_2d_decision_surface(self):
